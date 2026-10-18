@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="MicroTime helps students use the gaps between classes.">
+</head><body>
+<title>MicroTime</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- colours (light + dark) ---------- */
+:root{
+  --paper:#f5f0e6; --card:#fbf8f2; --ink:#1f1b16; --soft:#6d645a; --rule:#ddd3c2;
+  --accent:#c8442a; --accent-ink:#fff; --ok:#3d7a4f; --tint:#efe6d6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#15120f; --card:#1d1915; --ink:#efe8db; --soft:#a49a8c; --rule:#3a332b;
+  --accent:#e2694f; --accent-ink:#15120f; --ok:#7fbf8f; --tint:#262019;}}
+:root[data-theme="dark"]{
+  --paper:#15120f; --card:#1d1915; --ink:#efe8db; --soft:#a49a8c; --rule:#3a332b;
+  --accent:#e2694f; --accent-ink:#15120f; --ok:#7fbf8f; --tint:#262019;}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "Work Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 96px}
+h1,h2,.serif{font-family:"Space Grotesk",system-ui,sans-serif;font-weight:600;letter-spacing:-.02em}
+h1{font-size:34px;line-height:1.1;margin:8px 0 10px}
+h2{font-size:22px;margin:0 0 6px}
+p{margin:0 0 12px}
+.soft{color:var(--soft)} .small{font-size:13px}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;width:100%}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ---------- header + navigation ---------- */
+header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--ink);padding-bottom:8px}
+.brand{font-family:"Space Grotesk",system-ui,sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.brand i{color:var(--accent);font-style:normal}
+.live{font-size:12px;color:var(--soft)}
+.live b{color:var(--ink)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--rule);display:flex;justify-content:center;z-index:5}
+nav button{flex:1;max-width:120px;background:none;border:0;padding:12px 2px 14px;font-size:13px;color:var(--soft);border-top:2px solid transparent}
+nav button.on{color:var(--ink);border-top-color:var(--accent)}
+
+/* ---------- views fade in ---------- */
+.view{display:none;animation:in .25s ease}
+.view.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- building blocks ---------- */
+.section{border-bottom:1px solid var(--rule);padding:18px 0}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin-bottom:8px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{background:none;border:1px solid var(--rule);border-radius:99px;padding:7px 14px;font-size:14px;transition:.15s}
+.pill:hover{border-color:var(--ink)}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn{display:block;width:100%;border:0;border-radius:8px;padding:14px;font-weight:600;background:var(--accent);color:var(--accent-ink);transition:transform .1s}
+.btn:active{transform:scale(.99)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.line{background:none;color:var(--ink);border:1px solid var(--ink)}
+.link{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.challenge{background:var(--tint);border-radius:10px;padding:14px 16px;margin:16px 0 4px}
+.challenge .done{color:var(--ok);font-weight:600;font-size:13px}
+
+/* ---------- idea list ---------- */
+.idea{border-top:1px solid var(--rule);padding:14px 0}
+.idea:last-child{border-bottom:1px solid var(--rule)}
+.idea h3{font-family:"Space Grotesk",system-ui,sans-serif;font-weight:600;font-size:19px;margin:0 0 2px}
+.idea .meta{font-size:12px;color:var(--soft);text-transform:uppercase;letter-spacing:.06em}
+.idea .acts{display:flex;gap:14px;margin-top:8px;font-size:14px}
+
+/* ---------- timer ---------- */
+.clock{font-family:"Space Grotesk",system-ui,sans-serif;font-weight:500;font-size:88px;letter-spacing:-.03em;line-height:1;text-align:center;margin:24px 0 8px;font-variant-numeric:tabular-nums}
+.bar{height:3px;background:var(--rule);margin:12px 0 20px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width 1s linear}
+.status{text-align:center;font-size:14px;color:var(--soft);min-height:21px}
+.focus-on{position:fixed;inset:0;background:#12100d;color:#efe8db;z-index:10;display:flex;flex-direction:column;justify-content:center;padding:24px}
+.focus-on .clock,.focus-on h2{color:#efe8db}
+.focus-on .soft,.focus-on .status{color:#b8ad9e}
+.focus-on .btn.line{color:#efe8db;border-color:#efe8db}
+.focus-on .bar{background:#3a332b}
+.focus-on.left{background:#7a1f12}
+
+/* ---------- lists: board, spots, log ---------- */
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--rule);padding:10px 0;font-size:15px}
+.list li:last-child{border-bottom:1px solid var(--rule)}
+.list li.me{color:var(--accent);font-weight:600}
+.list .n{color:var(--soft);width:22px;flex:none}
+.list .grow{flex:1}
+.tabs{display:flex;gap:18px;margin-bottom:10px}
+.tabs button{background:none;border:0;padding:0 0 4px;color:var(--soft);border-bottom:1px solid transparent}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+.podium{display:flex;gap:8px;margin:8px 0 18px}
+.podium div{flex:1;background:var(--tint);border-radius:10px;padding:12px;text-align:center}
+.podium b{display:block;font-family:"Space Grotesk",system-ui,sans-serif;font-size:26px;font-weight:600}
+.stats{display:flex;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.stats div{flex:1;padding:12px 4px;text-align:center;font-size:12px;color:var(--soft)}
+.stats div+div{border-left:1px solid var(--rule)}
+.stats b{display:block;font-family:"Space Grotesk",system-ui,sans-serif;font-size:28px;font-weight:600;color:var(--ink)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.badge{font-size:13px;border:1px solid var(--ink);border-radius:99px;padding:4px 10px}
+.badge.off{border-style:dashed;color:var(--soft);border-color:var(--rule)}
+.vote{background:none;border:1px solid var(--rule);border-radius:6px;padding:2px 10px;font-size:13px}
+.vote.on{border-color:var(--accent);color:var(--accent)}
+.stars{display:flex;gap:4px;margin:8px 0 12px}
+.stars button{background:none;border:0;font-size:30px;color:var(--rule);padding:0 2px}
+.stars button.on{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%) translateY(10px);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:8px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:20}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.hide{display:none!important}
+.lite{font-size:13px;background:var(--tint);border-radius:8px;padding:8px 12px;margin:10px 0 0}
+.lite a{color:var(--accent)}
+/* ---------- week ---------- */
+.nextgap{border:1px solid var(--ink);border-radius:10px;padding:14px 16px;margin:12px 0 4px}
+.nextgap b{font-family:"Space Grotesk",system-ui,sans-serif;font-size:20px}
+.day{font-family:"Space Grotesk",system-ui,sans-serif;font-weight:600;margin:14px 0 4px}
+.gap{border-top:1px solid var(--rule);padding:8px 0;font-size:14px}
+.gap .when{display:flex;justify-content:space-between}
+.gap .fill{color:var(--soft);font-size:13px;margin-top:2px}
+.tag{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft);margin-right:6px}
+.chip{background:var(--tint);border-radius:99px;padding:5px 12px;font-size:14px;border:0}
+.practice{white-space:pre-wrap;font-size:15px;margin-top:10px;text-align:left}
+/* ---------- flashcards ---------- */
+.drop{display:block;margin-top:14px;border:1.5px dashed var(--rule);border-radius:10px;padding:22px 16px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--tint)}
+.drop input{display:none}
+.flash{perspective:1000px;margin:18px 0 12px;cursor:pointer}
+.flash-in{position:relative;min-height:220px;transition:transform .45s;transform-style:preserve-3d}
+.flash.flipped .flash-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--ink);border-radius:12px;background:var(--card);padding:22px;display:flex;flex-direction:column;justify-content:center;text-align:center;font-size:19px}
+.face.back{transform:rotateY(180deg);background:var(--tint)}
+.face .label{margin-bottom:10px}
+.timerbar{background:var(--ink);color:var(--paper);border-radius:8px;padding:8px 12px;font-size:14px;display:flex;justify-content:space-between;margin-top:12px}
+.timerbar button{background:none;border:0;color:var(--paper);text-decoration:underline}
+footer{margin-top:28px;font-size:12px;color:var(--soft)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">Micro<i>Time</i></div>
+    <div class="live" id="liveBox"></div>
+  </header>
+  <p class="lite">MicroTime Lite. The leaderboard, quiet spots and AI flashcards are in the <a href="https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan" target="_blank" rel="noopener">full version</a>.</p>
+
+  <!-- =============== PLAN =============== -->
+  <section class="view on" id="v-plan">
+    <h1>What will you do with this gap?</h1>
+    <p class="soft">Three questions, three ideas that fit.</p>
+
+    <div class="challenge">
+      <div class="label">Today's challenge <span class="done hide" id="chDone">· done, +10</span></div>
+      <div id="chText"></div>
+    </div>
+
+    <div class="nextgap" id="nextGap">
+      <div class="label">Next gap</div>
+      <div id="nextGapText"><button class="link" data-go="v-week">Add your timetable</button> and MicroTime will find your gaps for you.</div>
+    </div>
+
+    <div class="section">
+      <div class="label">How long is your gap?</div>
+      <div class="pills" data-key="mins">
+        <button class="pill" data-v="15">15 min</button><button class="pill" data-v="30">30 min</button>
+        <button class="pill" data-v="45">45 min</button><button class="pill" data-v="60">1 hour</button>
+        <button class="pill" data-v="90">1.5 h+</button>
+      </div>
+      <p class="small soft" style="margin:10px 0 0">Or: next class at <input type="time" id="classAt" style="width:auto;padding:4px 8px"></p>
+    </div>
+    <div class="section">
+      <div class="label">Energy</div>
+      <div class="pills" data-key="energy">
+        <button class="pill" data-v="low">Tired</button><button class="pill" data-v="mid">Okay</button><button class="pill" data-v="high">Focused</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="label">Where are you?</div>
+      <div class="pills" data-key="place">
+        <button class="pill" data-v="campus">On campus</button><button class="pill" data-v="library">Library</button>
+        <button class="pill" data-v="cafe">Café</button><button class="pill" data-v="transit">On the move</button><button class="pill" data-v="home">Home</button>
+      </div>
+    </div>
+    <div style="margin-top:18px"><button class="btn" id="go" disabled>Show my ideas</button></div>
+    <p class="center small" style="text-align:center;margin-top:12px"><button class="link" id="justTimer">Just start a timer</button></p>
+
+    <div id="ideasBox" class="hide" style="margin-top:20px">
+      <div class="label" id="ideasTitle"></div>
+      <div id="ideas"></div>
+      <p style="margin-top:12px"><button class="link" id="shuffle">Show other ideas</button></p>
+    </div>
+
+    <p class="small soft" style="margin-top:20px">Your tasks and timetable live in the <button class="link" data-go="v-week">Week</button> tab.</p>
+  </section>
+
+  <!-- =============== TIMER =============== -->
+  <section class="view" id="v-timer">
+    <div id="timerBox">
+      <div class="label" style="text-align:center;margin-top:24px">Now</div>
+      <h2 id="tName" style="text-align:center"></h2>
+      <div class="clock" id="tClock">00:00</div>
+      <div class="status" id="tStatus"></div>
+      <div class="bar"><i id="tBar"></i></div>
+      <div class="row"><button class="btn line" id="pause">Pause</button><button class="btn line" id="plus5">+5 min</button></div>
+      <div class="row" style="margin-top:8px"><button class="btn line" id="focusBtn">Focus mode</button><button class="btn" id="done">Done</button></div>
+      <p style="text-align:center;margin-top:8px" class="hide" id="partialBox"><button class="btn line" id="partial">Done for now, move the rest</button></p>
+      <p style="text-align:center;margin-top:14px" class="small">
+        <label><input type="checkbox" id="breakOn" style="width:auto"> Take a 5-min break halfway</label>
+      </p>
+      <div class="hide" id="practiceBox" style="margin-top:14px">
+        <button class="btn line" id="getPractice">Give me exercises</button>
+        <div id="practiceText" class="practice"></div>
+        <p style="margin:6px 0 0" class="hide" id="answersLink"><button class="link" id="showAnswers">Show answers</button></p>
+        <div id="answersText" class="practice hide"></div>
+      </div>
+      <p style="text-align:center;margin-top:10px" class="hide" id="cardsLinkBox"><button class="btn line" id="openCards">Open my flashcards</button></p>
+      <p style="text-align:center" class="small"><button class="link" id="skip">Not now, stop</button></p>
+      <p class="status" id="motivation"></p>
+    </div>
+  </section>
+
+  <!-- =============== AFTER A GAP =============== -->
+  <section class="view" id="v-after">
+    <h1 id="aTitle">Gap used.</h1>
+    <p class="soft" id="aSub"></p>
+    <div class="section">
+      <div class="label">What did you get done? (just for you)</div>
+      <input id="aNote" placeholder="Read 6 pages of chapter 3">
+    </div>
+    <div class="section">
+      <div class="label">How useful was MicroTime just now?</div>
+      <div class="stars" id="stars"></div>
+      <textarea id="aText" placeholder="What would make it better for you? (optional)"></textarea>
+    </div>
+    <button class="btn" id="aSave">Save</button>
+  </section>
+
+  <!-- =============== WEEK =============== -->
+  <section class="view" id="v-week">
+    <h1>Your week</h1>
+    <p class="soft">Add your timetable once. MicroTime finds your gaps and fits your tasks into them, most urgent first.</p>
+
+    <div class="section">
+      <h2>Timetable</h2>
+      <p class="small soft" id="ttStatus">No timetable yet.</p>
+      <label class="drop" id="ttDrop">
+        <input type="file" id="ttFile">
+        <strong>Upload your timetable</strong><br>
+        <span class="small soft" id="ttHint">A calendar file (.ics) from Google Calendar, Outlook or your school portal</span>
+      </label>
+      <p class="small" style="margin:8px 0 0"><button class="link" id="ttClear" style="color:var(--soft)">Remove timetable</button></p>
+    </div>
+
+    <div class="section">
+      <h2>Gaps this week</h2>
+      <p class="small soft" id="weekSummary"></p>
+      <p class="small soft">Missed a gap or only did part of a task? What's left moves to your next free gap by itself.</p>
+      <div id="weekGaps"></div>
+    </div>
+
+    <div class="section">
+      <h2>Tasks</h2>
+      <p class="small soft">Anything that needs doing, not only study: errands, emails, gym, calls.</p>
+      <input id="tText" placeholder="Send internship application">
+      <div class="row" style="margin-top:8px">
+        <select id="tType"><option value="study">Study</option><option value="admin">Life admin</option><option value="errand">Errand</option><option value="health">Health</option><option value="social">Social</option><option value="personal">Personal</option></select>
+        <select id="tMins"><option value="10">10 min</option><option value="15" selected>15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1.5 h</option></select>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <select id="tCourse"><option value="">No course</option></select>
+        <input type="date" id="tDue" title="Due date">
+      </div>
+      <p style="margin:8px 0 0"><button class="link" id="tAdd">Add task</button></p>
+      <ul class="list" id="weekTasks" style="margin-top:10px"></ul>
+    </div>
+
+    <div class="section">
+      <h2>Courses</h2>
+      <p class="small soft">When nothing is due, MicroTime suggests quick practice for these.</p>
+      <div class="row"><input id="courseName" placeholder="Python" style="flex:2"><button class="btn line" id="courseAdd" style="flex:1;padding:10px">Add</button></div>
+      <div class="pills" id="courses" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- =============== BOARD =============== -->
+  <section class="view" id="v-board">
+    <h1>This week</h1>
+    <p class="soft">Points reset every Monday. One point per minute well used, plus bonuses.</p>
+    <div class="podium" id="podium"></div>
+    <div class="tabs"><button class="on" data-board="people">Students</button><button data-board="classes">Classes</button></div>
+    <ol class="list" id="board"></ol>
+    <p class="small soft" id="boardNote"></p>
+    <p style="margin-top:18px"><button class="link" data-go="v-spots">Quiet spots on campus</button></p>
+  </section>
+
+  <!-- =============== SPOTS =============== -->
+  <section class="view" id="v-spots">
+    <h1>Quiet spots</h1>
+    <p class="soft">Places to work between classes, added by students. Vote for the ones that really are quiet.</p>
+    <div class="section">
+      <input id="spotName" placeholder="Library, 2nd floor, back tables">
+      <input id="spotNote" placeholder="Why it's good (plugs? quiet after 2pm?)" style="margin-top:8px">
+      <p style="margin:8px 0 0"><button class="link" id="addSpot">Add spot</button></p>
+    </div>
+    <ul class="list" id="spots"></ul>
+  </section>
+
+  <!-- =============== CARDS =============== -->
+  <section class="view" id="v-cards">
+    <div class="timerbar hide" id="cardsTimer"><span id="cardsTimerText"></span><button id="backToTimer">Back to timer</button></div>
+    <div id="deckHome">
+      <h1>Flashcards</h1>
+      <p class="soft">Upload your lecture notes and get a deck to revise in your next gap.</p>
+      <label class="drop" id="drop">
+        <input type="file" id="files" multiple>
+        <strong>Choose files</strong> or drop them here<br>
+        <span class="small soft" id="fileHint">PDF, .txt or .md notes</span>
+      </label>
+      <div class="small soft" id="fileList" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:10px">
+        <input id="deckTitle" placeholder="Deck name (e.g. Linear Algebra, week 4)" style="flex:2">
+        <select id="deckSize"><option value="8">8 cards</option><option value="12" selected>12 cards</option><option value="20">20 cards</option></select>
+      </div>
+      <div style="margin-top:12px"><button class="btn" id="makeDeck" disabled>Make my flashcards</button></div>
+      <p class="status" id="makeStatus" style="text-align:left;margin-top:8px"></p>
+      <div class="section">
+        <h2>My decks</h2>
+        <ul class="list" id="decks"></ul>
+      </div>
+    </div>
+    <div id="studyBox" class="hide">
+      <p style="margin:12px 0 0"><button class="link" id="leaveStudy">All decks</button></p>
+      <h2 id="studyTitle" style="margin-top:8px"></h2>
+      <div class="small soft" id="studyCount"></div>
+      <div class="flash" id="flash"><div class="flash-in">
+        <div class="face"><div class="label">Question</div><div id="qText"></div></div>
+        <div class="face back"><div class="label">Answer</div><div id="aText2"></div></div>
+      </div></div>
+      <p class="small soft" style="text-align:center">Tap the card to flip it</p>
+      <div class="row"><button class="btn line" id="again">Again</button><button class="btn" id="gotIt">Got it</button></div>
+    </div>
+  </section>
+
+  <!-- =============== ME =============== -->
+  <section class="view" id="v-me">
+    <h1>You</h1>
+    <div class="section">
+      <div class="row">
+        <input id="nick" placeholder="Nickname for the board" maxlength="24">
+        <select id="myClass"><option value="">Your class</option><option>PGE1</option><option>PGE2</option><option>PGE3</option><option>PGE4</option><option>MSc</option><option>Other school</option></select>
+      </div>
+      <input id="invitedBy" placeholder="Who told you about MicroTime? (their nickname)" style="margin-top:8px" maxlength="24">
+      <p class="small soft" style="margin:6px 0 0">Your friend gets 20 bonus points when you join.</p>
+    </div>
+    <div class="stats" style="margin-top:6px">
+      <div><b id="stWeek">0</b>this week</div><div><b id="stStreak">0</b>day streak</div><div><b id="stMins">0</b>minutes total</div>
+    </div>
+    <div class="badges" id="badges"></div>
+    <div class="section">
+      <h2>Today</h2>
+      <ul class="list" id="log"></ul>
+    </div>
+    <div class="section">
+      <h2>Bring a friend</h2>
+      <p class="small soft">Copy a short message with the link. Every friend who names you earns you 20 points.</p>
+      <button class="btn line" id="share">Copy invite message</button>
+    </div>
+  </section>
+
+  <footer>A student project by Anik Vora &amp; Karan Dholiya, aivancity. Prototype v0.6 (Lite). <a href="https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan" style="color:inherit">Open the full version</a>.</footer>
+</div>
+
+<nav>
+  <button class="on" data-view="v-plan">Plan</button>
+  <button data-view="v-week">Week</button>
+  <button data-view="v-cards">Cards</button>
+  <button data-view="v-board">Board</button>
+  <button data-view="v-me">You</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ IDEA BANK ============ */
+const BANK=[
+// study
+{t:"Review today's lecture notes",d:"Re-read and highlight while it's fresh. Future you will thank you.",m:15,e:["mid","high"],p:["campus","library","cafe","home"],c:"study",em:"📝"},
+{t:"Make 10 flashcards",d:"Upload your notes in the Cards tab and get a deck in a minute.",m:15,e:["mid","high"],p:["campus","library","cafe","home","transit"],c:"study",em:"🗂️"},
+{t:"Quiz yourself with flashcards",d:"Go through cards you already have. Low effort, real memory gains.",m:10,e:["low","mid","high"],p:["campus","library","cafe","home","transit"],c:"study",em:"🧠"},
+{t:"Start one homework question",d:"Just one. Starting is the hardest part, and now it's done.",m:20,e:["mid","high"],p:["library","cafe","home","campus"],c:"study",em:"✏️"},
+{t:"Deep work block",d:"Phone face down, one task, no tabs. Pick your hardest assignment.",m:45,e:["high"],p:["library","home"],c:"study",em:"🎯"},
+{t:"Finish a full assignment section",d:"Aim for one complete part you can tick off before next class.",m:60,e:["high","mid"],p:["library","home","cafe"],c:"study",em:"📚"},
+{t:"Outline your next essay or report",d:"Headings and 3 bullet points each. The writing gets much easier after.",m:25,e:["mid","high"],p:["library","cafe","home","campus"],c:"study",em:"🧩"},
+{t:"Watch a short explainer video",d:"Find a 10-min video on the topic you understood least this week.",m:15,e:["low","mid"],p:["campus","cafe","home","transit","library"],c:"study",em:"🎬"},
+{t:"Prepare questions for your next class",d:"Write down 2 things you didn't get, ask the teacher today.",m:10,e:["mid","high"],p:["campus","library","cafe","transit"],c:"study",em:"❓"},
+{t:"Practise for an upcoming exam",d:"Do past questions under a timer. Check answers at the end.",m:45,e:["high"],p:["library","home"],c:"study",em:"⏱️"},
+{t:"Listen to a study podcast",d:"Learn something related to your course without needing a desk.",m:20,e:["low","mid"],p:["transit","campus","cafe","home"],c:"study",em:"🎧"},
+{t:"Group sync with classmates",d:"Grab your project group for a quick 'who does what' check-in.",m:20,e:["mid","high"],p:["campus","cafe","library"],c:"study",em:"👥"},
+{t:"Learn 15 words in a new language",d:"Use an app or your notes. Small daily wins add up fast.",m:15,e:["low","mid","high"],p:["campus","cafe","home","transit","library"],c:"study",em:"🗣️"},
+// life admin
+{t:"Plan the rest of your day",d:"List 3 things you want done before bed, in order.",m:10,e:["low","mid","high"],p:["campus","library","cafe","home","transit"],c:"admin",em:"🗒️"},
+{t:"Clear your inbox",d:"Answer the quick emails, archive the rest. Stop carrying them in your head.",m:15,e:["low","mid"],p:["campus","library","cafe","home","transit"],c:"admin",em:"📬"},
+{t:"Check deadlines for this week",d:"Open your school portal and put every due date in your calendar.",m:10,e:["low","mid","high"],p:["campus","library","cafe","home","transit"],c:"admin",em:"📅"},
+{t:"Sort your files and downloads",d:"Rename and move this week's course files into folders.",m:15,e:["low","mid"],p:["library","cafe","home","campus"],c:"admin",em:"🗃️"},
+{t:"Update your CV or LinkedIn",d:"Add one project or skill from this semester.",m:25,e:["mid","high"],p:["library","cafe","home"],c:"admin",em:"💼"},
+{t:"Apply for one internship",d:"One application, done properly. That's real progress.",m:45,e:["mid","high"],p:["library","home","cafe"],c:"admin",em:"🚀"},
+{t:"Plan your meals and groceries",d:"Write the week's meals and a shopping list. Saves money too.",m:15,e:["low","mid"],p:["campus","cafe","home","transit"],c:"admin",em:"🛒"},
+{t:"Reply to messages you've been ignoring",d:"Family, friends, that group chat. Five minutes of replies.",m:10,e:["low","mid"],p:["campus","cafe","home","transit","library"],c:"admin",em:"💬"},
+{t:"Do a small errand nearby",d:"Post office, printing, pharmacy, bank. Get it off your list.",m:30,e:["low","mid"],p:["campus","cafe","transit"],c:"admin",em:"🏃"},
+{t:"Budget check",d:"Look at what you spent this week and set a limit for the next one.",m:15,e:["mid"],p:["campus","cafe","home","library"],c:"admin",em:"💶"},
+// rest & wellbeing
+{t:"Take a real break",d:"No phone. Look out a window, breathe, let your brain reset. Rest counts.",m:10,e:["low","mid","high"],p:["campus","library","cafe","home","transit"],c:"rest",em:"🌿"},
+{t:"Walk around the block",d:"Fresh air beats scrolling. You'll come back sharper.",m:15,e:["low","mid","high"],p:["campus","cafe","home"],c:"rest",em:"🚶"},
+{t:"Power nap",d:"Set an alarm for 20 minutes. Longer makes you groggy.",m:20,e:["low"],p:["home","library"],c:"rest",em:"😴"},
+{t:"Eat something proper",d:"A real snack or lunch, sitting down, not in a rush.",m:20,e:["low","mid","high"],p:["campus","cafe","home"],c:"rest",em:"🥪"},
+{t:"Stretch and drink water",d:"Neck, back, shoulders. Then a full glass of water.",m:5,e:["low","mid","high"],p:["campus","library","home","cafe"],c:"rest",em:"💧"},
+{t:"Read a few pages for fun",d:"A book you chose, not a textbook.",m:20,e:["low","mid"],p:["campus","library","cafe","home","transit"],c:"rest",em:"📖"},
+{t:"Call someone you miss",d:"A quick call with family or an old friend.",m:15,e:["low","mid"],p:["campus","home","transit","cafe"],c:"rest",em:"📞"},
+{t:"Quick workout",d:"Bodyweight circuit or the campus gym if there is one.",m:30,e:["mid","high"],p:["home","campus"],c:"rest",em:"💪"},
+{t:"Guided breathing",d:"Box breathing: 4 in, 4 hold, 4 out, 4 hold. Five rounds.",m:5,e:["low","mid","high"],p:["campus","library","cafe","home","transit"],c:"rest",em:"🫁"},
+{t:"Coffee with a classmate",d:"Get to know someone from your course a bit better.",m:30,e:["low","mid","high"],p:["campus","cafe"],c:"rest",em:"☕"},
+{t:"Journal for a few minutes",d:"How's the week going? Three lines is enough.",m:10,e:["low","mid"],p:["campus","library","cafe","home","transit"],c:"rest",em:"✍️"}
+];
+
+/* ============ SMALL HELPERS ============ */
+const $ = id => document.getElementById(id);
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSc3pN4DxvEzn_9UVQbQm2OSsJjD8f5_WvSmp9zkhzb8dtuMxw/viewform";
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+function load(key,fallback){ try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }catch(e){ return fallback; } }
+function save(key,value){ try{ localStorage.setItem(key,JSON.stringify(value)); }catch(e){} }
+function today(d=new Date()){ return d.toISOString().slice(0,10); }
+function weekKey(){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); return today(d); } // Monday of this week
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function fmt(sec){ sec=Math.max(0,Math.round(sec)); return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0"); }
+function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+
+/* ============ NAVIGATION ============ */
+function show(id){
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id===id));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.view===id));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.view));
+
+/* ============ SAVED STATE (this browser) ============ */
+let me = load("mt3_me",{points:0,week:0,weekKey:"",gaps:0,minutes:0,streak:0,lastDay:"",challengeDay:""});
+let log = load("mt3_log",[]);                 // today's finished gaps
+if(log.length && log[0].day!==today()) log=[];
+
+/* ============ DAILY CHALLENGE ============ */
+const CHALLENGES=[
+  {text:"Use one gap to recharge properly: a walk, a stretch or a break with no phone.",cat:"rest"},
+  {text:"Do one study task in a gap, even a 10-minute one.",cat:"study"},
+  {text:"Tick off one thing from your task list in the Week tab.",cat:"task"},
+  {text:"Clear one life-admin job you keep putting off.",cat:"admin"},
+  {text:"Beat the scroll: finish any idea in focus mode without leaving the page.",cat:"focus"}
+];
+const challenge = CHALLENGES[Math.floor(Date.now()/86400000)%CHALLENGES.length];
+$("chText").textContent = challenge.text;
+
+/* ============ PLAN: choose gap, energy, place ============ */
+const choice={mins:null,energy:null,place:null};
+const seen=new Set();
+document.querySelectorAll(".pills").forEach(group=>group.addEventListener("click",e=>{
+  const b=e.target.closest(".pill"); if(!b) return;
+  group.querySelectorAll(".pill").forEach(p=>p.setAttribute("aria-pressed",p===b));
+  choice[group.dataset.key]=b.dataset.v;
+  if(group.dataset.key==="mins") $("classAt").value="";
+  $("go").disabled=!(choice.mins&&choice.energy&&choice.place);
+}));
+
+// "Next class at 14:00" works out the gap length for you
+$("classAt").onchange=()=>{
+  const [h,m]=$("classAt").value.split(":").map(Number); if(isNaN(h)) return;
+  const end=new Date(); end.setHours(h,m,0,0);
+  const mins=Math.round((end-Date.now())/60000);
+  if(mins<5){ toast("That's less than 5 minutes away"); return; }
+  choice.mins=String(Math.min(mins,120)); choice.endAt=end.getTime();
+  document.querySelectorAll('[data-key="mins"] .pill').forEach(p=>p.setAttribute("aria-pressed","false"));
+  $("go").disabled=!(choice.mins&&choice.energy&&choice.place);
+  toast(mins+" minutes until class");
+};
+
+// Three suggestions of DIFFERENT kinds, so a gap is never "study, study, study":
+// 1) the most urgent task that fits (any kind), 2) something of another kind
+// (another task, course practice or a flashcard review), 3) a recharge or life idea.
+function pickIdeas(){
+  const max=+choice.mins, out=[], used=new Set();
+  const add=x=>{ if(x&&!used.has(x.kind)){ out.push(x); used.add(x.kind); seen.add(x.t); } };
+  const tasks=openTasks().filter(t=>t.m<=max);
+  const asIdea=t=>({t:t.t,d:(dueLabel(t.due)||"From your task list")+(t.course?" · "+t.course:""),m:t.m,c:"task",kind:t.type,taskId:t.id});
+  if(tasks[0]) add(asIdea(tasks[0]));                                       // 1. most urgent
+  const other=tasks.find(t=>!used.has(t.type)); if(other) add(asIdea(other)); // 2. a different kind of task
+  if(out.length<2&&planner.courses.length&&choice.energy!=="low"&&max>=10){ // 2b. course practice
+    const course=shuffle([...planner.courses])[0];
+    const deck=decks.find(d=>d.title.toLowerCase().includes(course.toLowerCase()));
+    add(deck ? {t:`Review your ${deck.title} flashcards`,d:`${deck.cards.length} cards ready in the Cards tab.`,m:Math.min(10,max),c:"study",kind:"practice",deck}
+             : {t:`${Math.min(15,max)} min of ${course} practice`,d:"Claude writes 3 quick exercises for you.",m:Math.min(15,max),c:"study",kind:"practice",course});
+  }
+  const fits=BANK.filter(x=>x.m<=max&&x.e.includes(choice.energy)&&x.p.includes(choice.place));
+  const lastTwoStudy=log.slice(0,2).length===2&&log.slice(0,2).every(l=>l.kind==="study");
+  const order = choice.energy==="low"||lastTwoStudy ? ["rest","admin","study"] : ["rest","admin","study"].sort(()=>Math.random()-.5);
+  for(const c of order){                                                     // 3. fill up with bank ideas of new kinds
+    if(out.length>=3) break;
+    const kind=c==="study"?"study":c;
+    if(used.has(kind)) continue;
+    let pool=fits.filter(x=>x.c===c&&!seen.has(x.t)); if(!pool.length) pool=fits.filter(x=>x.c===c);
+    if(pool.length) add({...shuffle(pool)[0],kind});
+  }
+  return out.slice(0,3);
+}
+const TYPE={study:"Study",admin:"Life admin",rest:"Recharge",errand:"Errand",health:"Health",social:"Social",personal:"Personal",practice:"Practice"};
+function showIdeas(){
+  const list=pickIdeas();
+  $("ideasTitle").textContent=(choice.endAt?"Until your next class":choice.mins+" minutes")+" · tap one to start";
+  $("ideas").innerHTML="";
+  list.forEach(x=>{
+    const div=document.createElement("div"); div.className="idea";
+    div.innerHTML=`<div class="meta">${TYPE[x.kind]||TYPE[x.c]||""} · about ${x.m} min</div><h3>${esc(x.t)}</h3><div class="soft small">${esc(x.d)}</div>
+      <div class="acts"><button class="link">Start</button><button class="link" style="color:var(--soft)">Skip</button></div>`;
+    const [start,skip]=div.querySelectorAll("button");
+    start.onclick=()=>startTimer(x);
+    skip.onclick=()=>{ div.remove(); if(!$("ideas").children.length) showIdeas(); };
+    $("ideas").appendChild(div);
+  });
+  $("ideasBox").classList.remove("hide");
+  log_event({type:"plan",mins:+choice.mins,energy:choice.energy,place:choice.place});
+}
+$("go").onclick=showIdeas;
+$("shuffle").onclick=showIdeas;
+$("justTimer").onclick=()=>startTimer({t:"Free focus",m:choice.endAt?+choice.mins:25,c:"free"});
+
+/* ============ TIMER ============ */
+const T={idea:null,total:0,left:0,running:false,startedAt:0,usedSec:0,warned:false,breakDone:false,onBreak:false,leftPage:0,focus:false,tick:null,wake:null};
+
+function startTimer(idea){
+  Object.assign(T,{idea,total:idea.m*60,left:idea.m*60,running:true,usedSec:0,warned:false,breakDone:false,onBreak:false,leftPage:0,focus:false});
+  if(choice.endAt&&idea.c==="free"){ T.total=T.left=Math.round((choice.endAt-Date.now())/1000); }
+  $("tName").textContent=idea.t; $("pause").textContent="Pause";
+  $("cardsLinkBox").classList.toggle("hide",!(/flashcard/i.test(idea.t)||idea.deck));
+  $("partialBox").classList.toggle("hide",!idea.taskId);
+  $("practiceBox").classList.toggle("hide",!idea.course);
+  $("practiceText").textContent=""; $("answersText").textContent=""; $("answersText").classList.add("hide"); $("answersLink").classList.add("hide");
+  T.active=true; show("v-timer"); keepAwake(true); setActive(true);
+  clearInterval(T.tick); T.tick=setInterval(tick,1000); draw();
+  log_event({type:"start",idea:idea.t,cat:idea.c,mins:idea.m});
+}
+function tick(){
+  if(!T.running) return;
+  T.left--; if(!T.onBreak) T.usedSec++;
+  // break halfway, if asked for
+  if($("breakOn").checked&&!T.breakDone&&T.left<=T.total/2){ T.breakDone=true; T.onBreak=true; T.breakLeft=300; beep(2); toast("Break time: 5 minutes"); }
+  if(T.onBreak){ T.breakLeft--; if(T.breakLeft<=0){ T.onBreak=false; beep(1); toast("Back to it"); } }
+  if(!T.warned&&T.left===120){ T.warned=true; beep(1); toast("2 minutes left"); }
+  if(T.left<=0){ T.running=false; beep(3); if(navigator.vibrate) navigator.vibrate([200,100,200]); }
+  draw();
+}
+function draw(){
+  $("tClock").textContent=T.left>0?fmt(T.left):"Time!";
+  $("tBar").style.width=Math.min(100,(1-T.left/T.total)*100)+"%";
+  $("tStatus").textContent = T.onBreak ? "Break: "+fmt(T.breakLeft) : !T.running&&T.left>0 ? "Paused" : T.focus&&T.leftPage ? `You left the page ${T.leftPage} time${T.leftPage>1?"s":""}` : "";
+}
+$("pause").onclick=()=>{ T.running=!T.running; $("pause").textContent=T.running?"Pause":"Resume"; draw(); };
+$("plus5").onclick=()=>{ T.left+=300; T.total+=300; T.running=true; $("pause").textContent="Pause"; draw(); toast("5 more minutes"); };
+$("done").onclick=()=>finish(true);
+$("partial").onclick=()=>finish(true,true);
+$("skip").onclick=()=>finish(false);
+
+// Focus mode: full dark screen; leaving the page is counted and turns it red
+$("focusBtn").onclick=()=>{
+  T.focus=!T.focus; $("timerBox").classList.toggle("focus-on",T.focus);
+  $("focusBtn").textContent=T.focus?"Leave focus":"Focus mode";
+  if(T.focus) toast("Focus mode: stay on this page");
+};
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden&&T.focus&&T.running){ T.leftPage++; $("timerBox").classList.add("left"); }
+  if(!document.hidden){ setTimeout(()=>$("timerBox").classList.remove("left"),1500); draw(); }
+});
+
+// keep the phone screen on while the timer runs (where the browser allows it)
+async function keepAwake(on){
+  try{ if(on&&navigator.wakeLock) T.wake=await navigator.wakeLock.request("screen"); else if(T.wake){ T.wake.release(); T.wake=null; } }catch(e){}
+}
+// small sound made in the browser, no file needed
+function beep(times){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    for(let i=0;i<times;i++){ const o=ctx.createOscillator(),g=ctx.createGain(); o.frequency.value=660; g.gain.value=.08;
+      o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime+i*.35); o.stop(ctx.currentTime+i*.35+.18); }
+  }catch(e){}
+}
+
+/* ============ AFTER A GAP ============ */
+let rating=0;
+function finish(didIt,partial){
+  clearInterval(T.tick); T.active=false; keepAwake(false); setActive(false);
+  T.focus=false; $("timerBox").classList.remove("focus-on","left"); $("focusBtn").textContent="Focus mode";
+  const used=Math.max(1,Math.round(T.usedSec/60));
+  log_event({type:didIt?"done":"stopped",idea:T.idea.t,minutesUsed:used,leftPage:T.leftPage});
+  const task = T.idea.taskId ? planner.tasks.find(x=>x.id===T.idea.taskId) : null;
+  // stopped or "done for now" on a task: the minutes not done move to the next free gap
+  if(task && (partial || (!didIt && used>=2))){
+    const left=Math.max(5,task.m-used);
+    task.carried=(task.carried||0)+used; task.m=left; savePlanner();
+    if(!didIt){ toast(`${used} min done. ${left} min moved to your next free gap.`); show("v-plan"); return; }
+    toast(`${left} min moved to your next free gap`);
+  }
+  if(!didIt){ toast("No problem. Plans change."); show("v-plan"); return; }
+  addPoints(used,T.idea);
+  if(task && !partial){ task.done=true; savePlanner(); toast("Task ticked off"); }
+  $("aTitle").textContent="Gap used.";
+  $("aSub").textContent=`${used} minute${used>1?"s":""} on "${T.idea.t}".`+(T.leftPage?` You left the page ${T.leftPage} time${T.leftPage>1?"s":""}.`:"");
+  $("aNote").value=""; $("aText").value=""; rating=0; drawStars();
+  T.lastUsed=used; show("v-after");
+}
+function drawStars(){
+  $("stars").innerHTML="";
+  for(let i=1;i<=5;i++){ const b=document.createElement("button"); b.textContent="★"; b.setAttribute("aria-label",i+" stars");
+    if(i<=rating) b.className="on"; b.onclick=()=>{ rating=i; drawStars(); }; $("stars").appendChild(b); }
+}
+$("aSave").onclick=async()=>{
+  log.unshift({day:today(),idea:T.idea.t,kind:T.idea.kind||T.idea.c,mins:T.lastUsed,note:$("aNote").value.trim().slice(0,120)}); save("mt3_log",log); drawLog();
+  if(rating||$("aText").value.trim()){
+    let ok=false;
+    if(db){ try{ await db.collection("feedback").add({rating,comment:$("aText").value.trim().slice(0,1000),idea:T.idea.t,at:new Date().toISOString()}); ok=true; }catch(e){} }
+    if(!ok) window.open(FORM,"_blank","noopener");
+  }
+  toast("Saved"); show("v-plan");
+};
+
+/* ============ POINTS, STREAK, BADGES ============ */
+function addPoints(minutes,idea){
+  const d=today(), yesterday=today(new Date(Date.now()-86400000));
+  if(me.weekKey!==weekKey()){ me.weekKey=weekKey(); me.week=0; }          // new week
+  if(me.lastDay!==d) me.streak = me.lastDay===yesterday ? me.streak+1 : 1;
+  me.lastDay=d; me.gaps++; me.minutes+=minutes; me.points+=minutes; me.week+=minutes;
+  const focusWin = challenge.cat==="focus" && T.focus!==undefined && T.leftPage===0 && T.usedSec>60;
+  if(me.challengeDay!==d && (challenge.cat===idea.c || focusWin)){ me.challengeDay=d; me.points+=10; me.week+=10; toast("Challenge done, +10"); }
+  save("mt3_me",me); drawMe(); sendScore();
+}
+const BADGES=[
+  {name:"First gap",ok:m=>m.gaps>=1},{name:"3-day streak",ok:m=>m.streak>=3},
+  {name:"1 hour well used",ok:m=>m.minutes>=60},{name:"10 gaps",ok:m=>m.gaps>=10},{name:"Brought a friend",ok:()=>myInvites>0}
+];
+function drawMe(){
+  if(me.weekKey!==weekKey()){ me.week=0; }
+  $("stWeek").textContent=me.week+myInvites*20; $("stStreak").textContent=me.streak; $("stMins").textContent=me.minutes;
+  $("badges").innerHTML=BADGES.map(b=>`<span class="badge ${b.ok(me)?"":"off"}">${b.name}</span>`).join("");
+  $("chDone").classList.toggle("hide",me.challengeDay!==today());
+}
+function drawLog(){
+  $("log").innerHTML = log.length ? log.map(l=>`<li><span class="grow">${esc(l.idea)}${l.note?`<br><span class="small soft">${esc(l.note)}</span>`:""}</span><span class="soft">${l.mins} min</span></li>`).join("")
+    : `<li class="soft">Nothing yet today. Your finished gaps will show here.</li>`;
+}
+
+/* ============ PROFILE + INVITES ============ */
+$("nick").value=load("mt_nick",""); $("myClass").value=load("mt_class",""); $("invitedBy").value=load("mt_inv","");
+$("nick").onchange=()=>{ save("mt_nick",$("nick").value.trim()); sendScore(); };
+$("myClass").onchange=()=>{ save("mt_class",$("myClass").value); sendScore(); };
+$("invitedBy").onchange=()=>{ save("mt_inv",$("invitedBy").value.trim()); sendScore(); };
+$("share").onclick=async()=>{
+  const msg=`I've been using MicroTime to stop wasting the gaps between classes. Try it in your next break and put "${$("nick").value.trim()||"me"}" as the friend who told you: ${location.href}`;
+  try{ await navigator.clipboard.writeText(msg); toast("Copied. Paste it to a friend."); }catch(e){ prompt("Copy this message:",msg); }
+};
+
+/* ============ SHARED DATA (leaderboard, spots, live count) ============ */
+let db=null, uid=null, players=[], myInvites=0, boardMode="people";
+async function log_event(ev){ if(!db) return; try{ await db.collection("events").add({...ev,at:new Date().toISOString()}); }catch(e){} }
+
+async function sendScore(){
+  const name=$("nick").value.trim(); if(!db||!uid||!name) return;   // only students with a nickname appear
+  if(me.weekKey!==weekKey()){ me.weekKey=weekKey(); me.week=0; }
+  try{ await db.collection("players").doc(uid).set({name:name.slice(0,24),cls:$("myClass").value,invitedBy:$("invitedBy").value.trim().toLowerCase().slice(0,24),
+    week:me.week,weekKey:me.weekKey,streak:me.streak,activeUntil:T.activeUntil||0,updated:Date.now()}); }catch(e){}
+}
+function setActive(on){ T.activeUntil = on ? Date.now()+T.left*1000 : 0; sendScore(); }
+
+function scoreOf(p){   // weekly points + 20 for each friend who named this player
+  const invites=players.filter(q=>q.invitedBy&&q.invitedBy===String(p.name).toLowerCase()).length;
+  return (p.weekKey===weekKey()?p.week:0)+invites*20;
+}
+function drawBoard(){
+  const list=players.map(p=>({...p,score:scoreOf(p)})).filter(p=>p.score>0).sort((a,b)=>b.score-a.score);
+  const me_=players.find(p=>p.id===uid); myInvites = me_ ? players.filter(q=>q.invitedBy===String(me_.name).toLowerCase()).length : 0;
+  $("podium").innerHTML=[0,1,2].map(i=>list[i]?`<div><b>${list[i].score}</b>${esc(list[i].name)}</div>`:`<div><b>·</b><span class="soft">open spot</span></div>`).join("");
+  let rows;
+  if(boardMode==="people") rows=list.slice(0,20).map((p,i)=>`<li class="${p.id===uid?"me":""}"><span class="n">${i+1}</span><span class="grow">${esc(p.name)}</span><span class="soft">${p.score} pts · ${p.streak||0}d</span></li>`);
+  else{
+    const byClass={}; list.forEach(p=>{ const c=p.cls||"No class"; byClass[c]=(byClass[c]||0)+p.score; });
+    rows=Object.entries(byClass).sort((a,b)=>b[1]-a[1]).map(([c,s],i)=>`<li><span class="n">${i+1}</span><span class="grow">${esc(c)}</span><span class="soft">${s} pts</span></li>`);
+  }
+  $("board").innerHTML=rows.join("")||`<li class="soft">No one yet this week. Finish a gap to be first.</li>`;
+  $("boardNote").textContent=db?"":"The live board is in the full version.";
+  const live=players.filter(p=>p.activeUntil>Date.now()&&p.id!==uid).length;
+  $("liveBox").innerHTML = live ? `<b>${live}</b> in a gap right now` : "";
+  $("motivation").textContent = live ? `${live} other student${live>1?"s are":" is"} using a gap right now.` : "";
+  drawMe();
+}
+document.querySelectorAll("[data-board]").forEach(b=>b.onclick=()=>{
+  boardMode=b.dataset.board; document.querySelectorAll("[data-board]").forEach(x=>x.classList.toggle("on",x===b)); drawBoard();
+});
+
+/* ---- quiet spots: each spot is a doc; each vote is its own doc so votes never clash ---- */
+let spots=[], votes=[];
+function drawSpots(){
+  const count=id=>votes.filter(v=>v.spot===id).length;
+  const mine=id=>votes.some(v=>v.spot===id&&v.id.endsWith("_"+uid));
+  const sorted=[...spots].sort((a,b)=>count(b.id)-count(a.id));
+  $("spots").innerHTML = sorted.length ? "" : `<li class="soft">${db?"No spots yet. Add the first one.":"Quiet spots are in the full version."}</li>`;
+  sorted.forEach(s=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<span class="grow">${esc(s.name)}${s.note?`<br><span class="small soft">${esc(s.note)}</span>`:""}</span><button class="vote ${mine(s.id)?"on":""}">▲ ${count(s.id)}</button>`;
+    li.querySelector("button").onclick=async()=>{
+      if(!db||!uid) return toast("Voting is in the full version");
+      const ref=db.collection("spotVotes").doc(s.id+"_"+uid);
+      try{ mine(s.id) ? await ref.delete() : await ref.set({spot:s.id}); }catch(e){ toast("Couldn't save your vote"); }
+    };
+    $("spots").appendChild(li);
+  });
+}
+$("addSpot").onclick=async()=>{
+  const name=$("spotName").value.trim(); if(!name) return;
+  if(!db) return toast("Adding spots is in the full version");
+  try{ await db.collection("spots").add({name:name.slice(0,80),note:$("spotNote").value.trim().slice(0,140),at:Date.now()}); $("spotName").value=""; $("spotNote").value=""; toast("Spot added"); }
+  catch(e){ toast("Couldn't add it"); }
+};
+
+/* ============ WEEK PLANNER: timetable, gaps, tasks, courses ============ */
+// Everything the student plans is kept in one object, saved in this browser
+// and (when signed in) privately in their account.
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+let planner = load("mt_planner",{classes:[],tasks:[],courses:[]});
+// carry over tasks from the old "My tasks" list
+load("mt_tasks",[]).forEach(t=>planner.tasks.push({id:"t"+Math.random().toString(36).slice(2,8),t:t.t,m:t.m,type:"personal",course:"",due:"",done:false}));
+save("mt_tasks",[]);
+
+function savePlanner(){
+  save("mt_planner",planner);
+  if(db&&uid) db.collection("data/users/"+uid).doc("planner").set({kind:"planner",...planner}).catch(()=>{});
+  drawWeek(); drawNextGap();
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
+
+/* ---- time helpers: "09:30" <-> minutes since midnight ---- */
+const toMin = hhmm => { const [h,m]=hhmm.split(":").map(Number); return h*60+m; };
+const toHHMM = min => String(Math.floor(min/60)).padStart(2,"0")+":"+String(min%60).padStart(2,"0");
+const dayIndex = (d=new Date()) => (d.getDay()+6)%7;          // Monday = 0
+
+/* ---- gaps = free time between two classes on the same day (10 min to 4 h) ---- */
+function gapsOfDay(day){
+  const cls=planner.classes.filter(c=>c.day===day).sort((a,b)=>toMin(a.start)-toMin(b.start));
+  const out=[];
+  for(let i=1;i<cls.length;i++){
+    const start=toMin(cls[i-1].end), end=toMin(cls[i].start);
+    if(end-start>=10&&end-start<=240) out.push({day,start,end,mins:end-start,next:cls[i].title});
+  }
+  return out;
+}
+function weekGaps(){ return DAYS.flatMap((_,d)=>gapsOfDay(d)); }
+
+/* ---- the gap you are in now, or the next one today ---- */
+function nextGap(){
+  const now=new Date(), nowMin=now.getHours()*60+now.getMinutes();
+  const g=gapsOfDay(dayIndex()).find(g=>g.end>nowMin);
+  if(!g) return null;
+  const inside=g.start<=nowMin;
+  return {...g,inside,left:inside?g.end-nowMin:g.mins};
+}
+function drawNextGap(){
+  if(!planner.classes.length) return;
+  const g=nextGap();
+  if(!g){ $("nextGapText").innerHTML=`<span class="soft">No more gaps today.</span>`; return; }
+  $("nextGapText").innerHTML=`<b>${toHHMM(g.start)} to ${toHHMM(g.end)}</b> · ${g.inside?g.left+" min left":g.mins+" min"}<br>
+    <span class="small soft">Before ${esc(g.next||"your next class")}</span><br><button class="link" id="useGap">Plan this gap</button>`;
+  $("useGap").onclick=()=>{
+    const end=new Date(); end.setHours(Math.floor(g.end/60),g.end%60,0,0);
+    choice.mins=String(g.left); choice.endAt=end.getTime();
+    document.querySelectorAll('[data-key="mins"] .pill').forEach(p=>p.setAttribute("aria-pressed","false"));
+    if(!choice.energy) choice.energy="mid"; if(!choice.place) choice.place="campus";
+    document.querySelectorAll('[data-key="energy"] .pill').forEach(p=>p.setAttribute("aria-pressed",p.dataset.v===choice.energy));
+    document.querySelectorAll('[data-key="place"] .pill').forEach(p=>p.setAttribute("aria-pressed",p.dataset.v===choice.place));
+    $("go").disabled=false; showIdeas(); $("ideasBox").scrollIntoView({behavior:"smooth"});
+  };
+}
+
+/* ---- tasks: most urgent first (due date, then shortest) ---- */
+const TASK_TYPE={study:"Study",admin:"Life admin",errand:"Errand",health:"Health",social:"Social",personal:"Personal"};
+function openTasks(){
+  return planner.tasks.filter(t=>!t.done).sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999")||a.m-b.m);
+}
+function dueLabel(due){
+  if(!due) return "";
+  const days=Math.round((new Date(due)-new Date(today()))/86400000);
+  return days<0?"overdue":days===0?"due today":days===1?"due tomorrow":"due "+new Date(due).toLocaleDateString(undefined,{weekday:"short"});
+}
+
+/* ---- fit tasks into this week's gaps, keeping a short break in long study gaps ---- */
+function weekPlan(){
+  const left=[...openTasks()], plan=[];
+  const todayI=dayIndex(), nowMin=new Date().getHours()*60+new Date().getMinutes();
+  for(const g of weekGaps()){
+    if(g.day<todayI||(g.day===todayI&&g.end<=nowMin)) continue;     // skip gaps already gone
+    let free = g.day===todayI&&g.start<nowMin ? g.end-nowMin : g.mins;   // a gap already started only has what is left
+    const items=[];
+    for(let i=0;i<left.length&&free>=10;i++){
+      if(left[i].m<=free){ items.push(left[i]); free-=left[i].m; left.splice(i,1); i--; }
+    }
+    const study=items.filter(t=>t.type==="study").reduce((s,t)=>s+t.m,0);
+    if(g.mins>=60&&study>=45&&free>=10) items.push({t:"10-min break",m:10,type:"rest"});
+    plan.push({gap:g,items});
+  }
+  return {plan,unplanned:left};
+}
+
+function drawWeek(){
+  // timetable status
+  const n=planner.classes.length;
+  $("ttStatus").textContent = n ? `${n} classes a week loaded.` : "No timetable yet.";
+  $("ttClear").classList.toggle("hide",!n);
+  // gaps with their planned tasks
+  const {plan,unplanned}=weekPlan();
+  const gapMins=weekGaps().reduce((s,g)=>s+g.mins,0), taskMins=openTasks().reduce((s,t)=>s+t.m,0);
+  $("weekSummary").textContent = n ? `${Math.floor(gapMins/60)} h ${gapMins%60} min of gaps this week · ${Math.floor(taskMins/60)} h ${taskMins%60} min of tasks`+(unplanned.length?` · ${unplanned.length} task${unplanned.length>1?"s":""} don't fit yet`:"") : "Upload your timetable to see your gaps.";
+  let html="", lastDay=-1;
+  plan.forEach(({gap,items})=>{
+    if(gap.day!==lastDay){ html+=`<div class="day">${DAYS[gap.day]}</div>`; lastDay=gap.day; }
+    html+=`<div class="gap"><div class="when"><span>${toHHMM(gap.start)} to ${toHHMM(gap.end)}</span><span class="soft">${gap.mins} min</span></div>
+      <div class="fill">${items.length?items.map(t=>esc(t.t)).join(" · "):"Free: pick something on the day"}</div></div>`;
+  });
+  $("weekGaps").innerHTML=html;
+  // task list
+  $("weekTasks").innerHTML = planner.tasks.length ? "" : `<li class="soft">No tasks yet.</li>`;
+  [...planner.tasks].sort((a,b)=>a.done-b.done||(a.due||"9999").localeCompare(b.due||"9999")).forEach(t=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<input type="checkbox" style="width:auto" ${t.done?"checked":""}>
+      <span class="grow" style="${t.done?"text-decoration:line-through;color:var(--soft)":""}"><span class="tag">${TASK_TYPE[t.type]}${t.course?" · "+esc(t.course):""}</span><br>${esc(t.t)}</span>
+      <span class="soft small" style="text-align:right">${t.carried&&!t.done?t.m+" min left":t.m+" min"}<br>${t.carried&&!t.done?t.carried+" min done":dueLabel(t.due)}</span><button class="link" style="color:var(--soft)">✕</button>`;
+    li.querySelector("input").onchange=e=>{ t.done=e.target.checked; savePlanner(); };
+    li.querySelector("button").onclick=()=>{ planner.tasks=planner.tasks.filter(x=>x!==t); savePlanner(); };
+    $("weekTasks").appendChild(li);
+  });
+  // courses
+  $("tCourse").innerHTML=`<option value="">No course</option>`+planner.courses.map(c=>`<option>${esc(c)}</option>`).join("");
+  $("courses").innerHTML="";
+  planner.courses.forEach(c=>{
+    const b=document.createElement("button"); b.className="chip"; b.textContent=c+"  ✕"; b.title="Remove";
+    b.onclick=()=>{ planner.courses=planner.courses.filter(x=>x!==c); savePlanner(); };
+    $("courses").appendChild(b);
+  });
+}
+$("tAdd").onclick=()=>{
+  const t=$("tText").value.trim(); if(!t) return;
+  planner.tasks.push({id:"t"+Date.now(),t:t.slice(0,80),m:+$("tMins").value,type:$("tType").value,course:$("tCourse").value,due:$("tDue").value,done:false});
+  $("tText").value=""; savePlanner(); toast("Task added");
+};
+$("courseAdd").onclick=()=>{
+  const c=$("courseName").value.trim(); if(!c||planner.courses.includes(c)) return;
+  planner.courses.push(c.slice(0,40)); $("courseName").value=""; savePlanner();
+};
+
+/* ---- timetable upload: .ics calendar file, or a photo read by Claude ---- */
+$("ttFile").onchange=async()=>{
+  const f=$("ttFile").files[0]; if(!f) return;
+  $("ttStatus").textContent="Reading your timetable…";
+  try{
+    const classes = f.type.startsWith("image/") ? await classesFromPhoto(f) : classesFromIcs(await f.text());
+    if(!classes.length) throw new Error("none");
+    planner.classes=classes; savePlanner(); toast(`${classes.length} classes found`);
+  }catch(e){ $("ttStatus").textContent="I couldn't find any classes in that file. Try an .ics export or a clearer photo."; }
+  $("ttFile").value="";
+};
+$("ttClear").onclick=()=>{ planner.classes=[]; savePlanner(); $("nextGapText").innerHTML=`<button class="link" data-go="v-week" onclick="show('v-week')">Add your timetable</button> and MicroTime will find your gaps for you.`; };
+
+// Reads an .ics file. Keeps weekly repeating classes plus one-off events from the last 7 days and next 7 days.
+function classesFromIcs(text){
+  text=text.replace(/\r?\n[ \t]/g,"");                                  // join folded lines
+  const out=[], seenKey=new Set(), now=Date.now();
+  for(const block of text.split("BEGIN:VEVENT").slice(1)){
+    const get=k=>{ const m=block.match(new RegExp("^"+k+"[^:\\n]*:(.*)$","m")); return m?m[1].trim():""; };
+    const start=icsDate(get("DTSTART")), end=icsDate(get("DTEND"));
+    if(!start||!end) continue;
+    const weekly=/FREQ=WEEKLY/.test(get("RRULE"));
+    if(!weekly&&Math.abs(start-now)>7*86400000) continue;
+    const c={day:dayIndex(start),start:toHHMM(start.getHours()*60+start.getMinutes()),end:toHHMM(end.getHours()*60+end.getMinutes()),title:get("SUMMARY").replace(/\\,/g,",").slice(0,60)};
+    const key=c.day+c.start+c.end; if(seenKey.has(key)) continue; seenKey.add(key); out.push(c);
+  }
+  return out;
+}
+function icsDate(v){
+  const m=v.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)/); if(!m) return null;
+  const [_,y,mo,d,h,mi,s,z]=m;
+  return z ? new Date(Date.UTC(y,mo-1,d,h,mi,s)) : new Date(y,mo-1,d,h,mi,s);
+}
+async function classesFromPhoto(file){
+  if(!sample||!imageLimits) throw new Error("no images");
+  const list=await sample.json(`This photo shows a student's weekly class timetable. List every class.
+Reply with JSON only: [{"day":"Mon","start":"09:00","end":"10:30","title":"Course name"}]. Use 24-hour times and the days Mon, Tue, Wed, Thu, Fri, Sat, Sun.`,{images:[file]});
+  return (Array.isArray(list)?list:[]).filter(c=>DAYS.includes(c.day)&&/^\d{1,2}:\d{2}$/.test(c.start)&&/^\d{1,2}:\d{2}$/.test(c.end))
+    .map(c=>({day:DAYS.indexOf(c.day),start:c.start.padStart(5,"0"),end:c.end.padStart(5,"0"),title:String(c.title||"").slice(0,60)}));
+}
+
+/* ---- course practice written by Claude for the length of the gap ---- */
+$("getPractice").onclick=async()=>{
+  if(!sample) return toast("Exercises are in the full version");
+  const course=T.idea.course; $("getPractice").disabled=true; $("practiceText").textContent="Writing your exercises…";
+  try{
+    const r=await sample.json(`Write a ${T.idea.m}-minute practice session for a university student taking "${course}".
+Give 3 short exercises that fit in that time, from easy to harder. Reply with JSON only: {"exercises":"1. ...\\n2. ...\\n3. ...","answers":"1. ...\\n2. ...\\n3. ..."}`);
+    $("practiceText").textContent=r.exercises||""; $("answersText").textContent=r.answers||"";
+    $("answersLink").classList.remove("hide");
+  }catch(e){ $("practiceText").textContent="Couldn't get exercises right now. Try again in a minute."; }
+  $("getPractice").disabled=false;
+};
+$("showAnswers").onclick=()=>$("answersText").classList.toggle("hide");
+
+/* ============ FLASHCARDS ============ */
+// Students upload notes (PDF, text, photos). Claude turns them into question/answer cards.
+let sample=null, imageLimits=null, decks=[], picked=[], study=null;
+const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+
+// open the cards tab from the timer (for flashcard ideas)
+$("openCards").onclick=()=>show("v-cards");
+$("backToTimer").onclick=()=>show("v-timer");
+
+// --- choosing files ---
+$("files").onchange=()=>pickFiles([...$("files").files]);
+$("drop").addEventListener("dragover",e=>{ e.preventDefault(); $("drop").classList.add("over"); });
+$("drop").addEventListener("dragleave",()=>$("drop").classList.remove("over"));
+$("drop").addEventListener("drop",e=>{ e.preventDefault(); $("drop").classList.remove("over"); pickFiles([...e.dataTransfer.files]); });
+function isImage(f){ return f.type.startsWith("image/"); }
+function pickFiles(list){
+  picked=list.filter(f=>/\.(pdf|txt|md)$/i.test(f.name)||(isImage(f)&&imageLimits));
+  $("fileList").textContent=picked.length?picked.map(f=>f.name).join(", "):"Those files aren't supported.";
+  if(!$("deckTitle").value&&picked[0]) $("deckTitle").value=picked[0].name.replace(/\.[^.]+$/,"");
+  $("makeDeck").disabled=!picked.length||!sample;
+}
+
+// --- reading text out of files ---
+async function loadPdfJs(){
+  if(window.pdfjsLib) return;
+  await new Promise((ok,fail)=>{ const s=document.createElement("script"); s.src=PDFJS+"pdf.min.js"; s.onload=ok; s.onerror=fail; document.head.appendChild(s); });
+  pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js";
+}
+async function pdfText(file){
+  await loadPdfJs();
+  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+  let text="";
+  for(let i=1;i<=Math.min(pdf.numPages,60);i++){
+    const page=await pdf.getPage(i); const c=await page.getTextContent();
+    text+=c.items.map(x=>x.str).join(" ")+"\n";
+  }
+  return text;
+}
+async function fileText(f){ return /\.pdf$/i.test(f.name) ? pdfText(f) : f.text(); }
+
+// --- asking Claude for cards ---
+$("makeDeck").onclick=async()=>{
+  $("makeDeck").disabled=true; $("makeStatus").textContent="Reading your files…";
+  try{
+    let notes=""; const images=[];
+    for(const f of picked){
+      if(isImage(f)) images.push(f);
+      else notes+=`\n\n### ${f.name}\n`+(await fileText(f));
+    }
+    notes=notes.replace(/\s+\n/g,"\n").slice(0,150000);
+    if(!notes.trim()&&!images.length){ $("makeStatus").textContent="I couldn't find any text. If it's a scanned PDF, take a photo of the pages instead."; $("makeDeck").disabled=false; return; }
+    if(imageLimits) images.splice(imageLimits.maxCount);
+    const n=+$("deckSize").value;
+    $("makeStatus").textContent="Making your flashcards… this can take up to a minute.";
+    const prompt=`You make revision flashcards for a university student.
+Write exactly ${n} flashcards from the study material below${images.length?" and the attached photos of notes or slides":""}.
+Rules: one idea per card; the question is short and specific; the answer is 1 to 3 sentences; cover the most important ideas, definitions and formulas; use the same language as the material; never invent facts that are not in the material.
+Reply with JSON only, in this shape: [{"q":"question","a":"answer"}]
+
+STUDY MATERIAL:${notes||" (see photos)"}`;
+    const cards=await sample.json(prompt,images.length?{images}:{});
+    const clean=(Array.isArray(cards)?cards:[]).filter(c=>c&&c.q&&c.a).map(c=>({q:String(c.q).slice(0,300),a:String(c.a).slice(0,600)}));
+    if(!clean.length) throw {code:"empty"};
+    await saveDeck({title:($("deckTitle").value.trim()||"My deck").slice(0,60),cards:clean,at:Date.now()});
+    $("makeStatus").textContent=`Done: ${clean.length} cards.`; picked=[]; $("fileList").textContent=""; $("files").value=""; $("deckTitle").value="";
+  }catch(e){
+    const why={not_granted:"You need to allow Claude for this page first.",rate_limited:"Too many requests right now. Try again in a minute.",prompt_too_large:"Those files are too long. Try fewer pages.",image_rejected:"One of the photos couldn't be read.",empty:"Claude didn't return any cards. Try again with clearer notes."};
+    $("makeStatus").textContent=why[e&&e.code]||"Something went wrong. Try again.";
+  }
+  $("makeDeck").disabled=!picked.length;
+};
+
+// --- saving decks: private to each student when signed in, otherwise in this browser ---
+function deckCollection(){ return db&&uid ? db.collection("data/users/"+uid) : null; }
+async function saveDeck(deck){
+  const col=deckCollection();
+  if(col){ await col.add({kind:"deck",...deck}); }
+  else{ decks.unshift({id:"local"+Date.now(),...deck}); save("mt_decks",decks); drawDecks(); }
+}
+async function removeDeck(d){
+  const col=deckCollection();
+  if(col&&!String(d.id).startsWith("local")) await col.doc(d.id).delete();
+  else{ decks=decks.filter(x=>x.id!==d.id); save("mt_decks",decks); drawDecks(); }
+}
+function drawDecks(){
+  $("decks").innerHTML=decks.length?"":`<li class="soft">No decks yet. Upload your notes above.</li>`;
+  decks.forEach(d=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<span class="grow"><button class="link" style="color:var(--ink);text-decoration:none;font-weight:600">${esc(d.title)}</button><br><span class="small soft">${d.cards.length} cards</span></span><button class="link" style="color:var(--soft)">delete</button>`;
+    const [open,del]=li.querySelectorAll("button");
+    open.onclick=()=>startStudy(d); del.onclick=()=>removeDeck(d);
+    $("decks").appendChild(li);
+  });
+}
+
+// --- studying: tap to flip, "Again" puts the card back at the end ---
+function startStudy(d){
+  study={deck:d,queue:d.cards.map((c,i)=>i),known:0};
+  $("studyTitle").textContent=d.title; $("deckHome").classList.add("hide"); $("studyBox").classList.remove("hide"); nextCard();
+}
+function nextCard(){
+  $("flash").classList.remove("flipped");
+  if(!study.queue.length){
+    $("qText").textContent="Deck done. Nice work."; $("aText2").textContent=""; $("studyCount").textContent=`${study.known} cards learned`;
+    toast("Deck finished"); return;
+  }
+  const c=study.deck.cards[study.queue[0]];
+  setTimeout(()=>{ $("qText").textContent=c.q; $("aText2").textContent=c.a; },150);
+  $("studyCount").textContent=`${study.known} of ${study.deck.cards.length} learned`;
+}
+$("flash").onclick=()=>$("flash").classList.toggle("flipped");
+$("gotIt").onclick=()=>{ if(!study.queue.length) return; study.queue.shift(); study.known++; nextCard(); };
+$("again").onclick=()=>{ if(!study.queue.length) return; study.queue.push(study.queue.shift()); nextCard(); };
+$("leaveStudy").onclick=()=>{ $("studyBox").classList.add("hide"); $("deckHome").classList.remove("hide"); };
+
+// --- small timer bar on the cards tab while a timer runs ---
+setInterval(()=>{
+  const on=T.active && !$("v-timer").classList.contains("on");   // a timer is running and you are on another tab
+  $("cardsTimer").classList.toggle("hide",!on);
+  if(on) $("cardsTimerText").textContent=`${T.idea.t} · ${fmt(T.left)} left`;
+},1000);
+
+async function startCards(){
+  decks=load("mt_decks",[]); drawDecks();
+  if(!window.claude||!claude.use){ $("fileHint").textContent="Flashcards from your notes are in the full version"; $("ttHint").textContent="A calendar file (.ics) from Google Calendar, Outlook or your school portal"; return; }
+  sample=await claude.use("sample");
+  if(!sample){ $("fileHint").textContent="Flashcards from your notes are in the full version"; return; }
+  imageLimits=(await sample.limits().catch(()=>null))?.images||null;
+  $("files").accept=".pdf,.txt,.md"+(imageLimits?","+imageLimits.mediaTypes.join(","):"");
+  $("fileHint").textContent=imageLimits?"PDF, .txt or .md notes, or photos of your notes":"PDF, .txt or .md notes";
+}
+function watchDecks(){
+  const col=deckCollection(); if(!col) return;
+  col.where("kind","==","deck").onSnapshot(s=>{
+    const cloud=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.at-a.at);
+    decks=[...cloud,...load("mt_decks",[])]; drawDecks();
+  },()=>{});
+}
+
+/* ============ START ============ */
+drawWeek(); drawNextGap(); drawMe(); drawLog(); drawBoard(); drawSpots(); startCards();
+(async()=>{
+  try{
+    if(!window.claude||!claude.use) return;
+    db=await claude.use("db"); if(!db) return;
+    const user=await claude.use("user"); uid=user?await user.id():null;
+    db.collection("players").onSnapshot(s=>{ players=s.docs.map(d=>({id:d.id,...d.data()})); drawBoard(); },()=>{});
+    db.collection("spots").onSnapshot(s=>{ spots=s.docs.map(d=>({id:d.id,...d.data()})); drawSpots(); },()=>{});
+    db.collection("spotVotes").onSnapshot(s=>{ votes=s.docs.map(d=>({id:d.id,...d.data()})); drawSpots(); },()=>{});
+    watchDecks();
+    const saved=await db.collection("data/users/"+uid).doc("planner").get().catch(()=>null);
+    if(saved&&saved.exists){ const p=saved.data(); planner={classes:p.classes||[],tasks:p.tasks||[],courses:p.courses||[]}; save("mt_planner",planner); drawWeek(); drawNextGap(); }
+    else if(planner.classes.length||planner.tasks.length) savePlanner();
+    sendScore();
+  }catch(e){ db=null; }
+})();
+</script>
+
+</body></html>
