@@ -4,7 +4,7 @@ MicroTime helps students use the gaps between their classes instead of losing th
 
 Pick how long your gap is, how much energy you have and where you are, and MicroTime gives you three ideas that fit: one of your own tasks, something different like course practice, and a proper break. Add your timetable once and it finds your gaps for you.
 
-**Try it:** [MicroTime Lite](./) (sign in with Google, Microsoft or as a guest) · [Full version](https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan) (leaderboard, quiet spots, AI flashcards)
+**Try it:** [MicroTime Lite](./) (sign in with Google or as a guest) · [Full version](https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan) (leaderboard, quiet spots, AI flashcards)
 
 ## What it does
 
