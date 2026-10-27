@@ -4,7 +4,7 @@
 </head><body>
 <title>MicroTime</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ---------- colours (light + dark) ---------- */
 :root{
@@ -134,6 +134,85 @@ nav button.on{color:var(--ink);border-top-color:var(--accent)}
 .timerbar{background:var(--ink);color:var(--paper);border-radius:8px;padding:8px 12px;font-size:14px;display:flex;justify-content:space-between;margin-top:12px}
 .timerbar button{background:none;border:0;color:var(--paper);text-decoration:underline}
 footer{margin-top:28px;font-size:12px;color:var(--soft)}
+
+/* =====================================================================
+   LIQUID GLASS LOOK
+   Frosted see-through panels floating over soft colour blobs.
+   Every glass panel uses the same 4 things: see-through fill, blur,
+   a thin bright edge and a soft shadow.
+   ===================================================================== */
+:root{
+  --glass:rgba(255,255,255,.52); --glass-strong:rgba(255,255,255,.74);
+  --edge:rgba(255,255,255,.75); --shine:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(255,255,255,.25);
+  --shadow:0 10px 30px rgba(40,30,20,.10), 0 1px 2px rgba(40,30,20,.06);
+  --blob1:rgba(232,98,64,.45); --blob2:rgba(110,150,255,.40); --blob3:rgba(255,196,120,.45);
+  --r:22px; --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --glass:rgba(38,32,28,.48); --glass-strong:rgba(48,41,36,.72); --edge:rgba(255,255,255,.14);
+  --shine:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(255,255,255,.04);
+  --shadow:0 10px 30px rgba(0,0,0,.35); --blob1:rgba(226,105,79,.30); --blob2:rgba(90,120,230,.28); --blob3:rgba(200,140,70,.25);}}
+:root[data-theme="dark"]{
+  --glass:rgba(38,32,28,.48); --glass-strong:rgba(48,41,36,.72); --edge:rgba(255,255,255,.14);
+  --shine:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(255,255,255,.04);
+  --shadow:0 10px 30px rgba(0,0,0,.35); --blob1:rgba(226,105,79,.30); --blob2:rgba(90,120,230,.28); --blob3:rgba(200,140,70,.25);}
+
+/* background: slow moving colour blobs behind everything */
+html{background:var(--paper)}
+body{background:transparent;font-family:var(--font);min-height:100vh}
+body::before{content:"";position:fixed;inset:-25%;z-index:-1;pointer-events:none;
+  background:radial-gradient(35% 30% at 20% 20%,var(--blob1),transparent 70%),
+             radial-gradient(30% 28% at 80% 35%,var(--blob2),transparent 70%),
+             radial-gradient(38% 32% at 45% 85%,var(--blob3),transparent 70%);
+  filter:blur(30px);animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(4%,-3%) rotate(8deg) scale(1.05)}}
+@media (prefers-reduced-motion:reduce){body::before{animation:none}}
+h1,h2,.serif,.brand,.idea h3,.clock,.stats b,.podium b,.nextgap b,.day{font-family:var(--font);letter-spacing:-.025em}
+h1{font-weight:700}
+
+/* the glass recipe */
+header,nav,.section,.challenge,.nextgap,.idea,.podium div,.stats,.face,.drop,.lite,.login-card,.toast,.timerbar{
+  background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shadow),var(--shine);
+  -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  header,nav,.section,.challenge,.nextgap,.idea,.podium div,.stats,.face,.drop,.lite,.login-card,.toast,.timerbar{background:var(--glass-strong)}}
+
+/* panels */
+header{position:sticky;top:10px;z-index:6;border-radius:99px;padding:10px 18px;align-items:center}
+.section,.challenge,.nextgap{border-radius:var(--r);padding:18px;margin:14px 0}
+.idea{border-radius:var(--r);padding:16px 18px;margin:10px 0}
+.idea:last-child{border-bottom:1px solid var(--edge)}
+.lite{border-radius:16px}
+.podium div{border-radius:18px}
+.stats{border-radius:var(--r);overflow:hidden}
+.stats div+div{border-left:1px solid var(--edge)}
+.face{border-radius:var(--r)}
+.face.back{background:var(--glass-strong)}
+.drop{border-style:dashed;border-radius:18px}
+.timerbar{color:var(--ink);border-radius:16px}.timerbar button{color:var(--accent)}
+.list li{border-top-color:var(--edge)}.list li:last-child{border-bottom-color:var(--edge)}
+
+/* floating tab bar */
+nav{left:50%;right:auto;bottom:12px;transform:translateX(-50%);width:calc(100% - 24px);max-width:520px;border-radius:99px;padding:5px;gap:2px;background:var(--glass-strong)}
+nav button{border:0;border-radius:99px;padding:10px 2px;font-weight:500;transition:background .2s,color .2s}
+nav button.on{background:var(--paper);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+
+/* controls */
+input,select,textarea{background:var(--glass-strong);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--shine)}
+.pill{background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shine);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.pill[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn{border-radius:16px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 82%,#fff),var(--accent));
+  box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 35%,transparent),inset 0 1px 0 rgba(255,255,255,.45)}
+.btn.line{background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shine);color:var(--ink)}
+.toast{color:var(--ink);border-radius:99px}
+.chip{background:var(--glass-strong)}
+.bar{border-radius:99px;overflow:hidden}
+
+/* sign in */
+.login{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:color-mix(in srgb,var(--paper) 35%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.login-card{width:100%;max-width:420px;border-radius:28px;padding:26px 22px}
+.login-card h1{font-size:28px;margin:10px 0 6px}
 </style>
 
 <div class="wrap">
@@ -230,6 +309,11 @@ footer{margin-top:28px;font-size:12px;color:var(--soft)}
       <div class="label">How useful was MicroTime just now?</div>
       <div class="stars" id="stars"></div>
       <textarea id="aText" placeholder="What would make it better for you? (optional)"></textarea>
+    </div>
+    <div class="section hide" id="askForm">
+      <h2>You've used 3 gaps!</h2>
+      <p class="small soft">Help us make MicroTime better. 6 quick questions, about 2 minutes.</p>
+      <a class="btn line" id="askBtn" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">Give feedback</a>
     </div>
     <button class="btn" id="aSave">Save</button>
   </section>
@@ -359,6 +443,7 @@ footer{margin-top:28px;font-size:12px;color:var(--soft)}
       <h2>Today</h2>
       <ul class="list" id="log"></ul>
     </div>
+    <p class="small soft" style="margin-top:14px">Signed in as <b id="whoAmI"></b> · <button class="link" id="signOut">Sign out</button></p>
     <div class="section">
       <h2>Bring a friend</h2>
       <p class="small soft">Copy a short message with the link. Every friend who names you earns you 20 points.</p>
@@ -366,7 +451,22 @@ footer{margin-top:28px;font-size:12px;color:var(--soft)}
     </div>
   </section>
 
-  <footer>A student project by Anik Vora &amp; Karan Dholiya, aivancity. Prototype v0.6 (Lite). <a href="https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan" style="color:inherit">Open the full version</a>.</footer>
+  <footer>A student project by Anik Vora &amp; Karan Dholiya, aivancity. Prototype v0.7 (Lite). <a href="https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan" style="color:inherit">Open the full version</a>.</footer>
+</div>
+
+<!-- =============== SIGN IN (first visit only) =============== -->
+<div class="login hide" id="login">
+  <div class="login-card">
+    <div class="brand">Micro<i>Time</i></div>
+    <h1>Use the gaps between your classes.</h1>
+    <p class="soft">Tell us who you are once. It takes 10 seconds, no password.</p>
+    <input id="lName" placeholder="Your name" maxlength="40" autocomplete="name">
+    <input id="lEmail" type="email" placeholder="Your email" maxlength="80" autocomplete="email" style="margin-top:8px">
+    <select id="lClass" style="margin-top:8px"><option value="">Your class</option><option>PGE1</option><option>PGE2</option><option>PGE3</option><option>PGE4</option><option>MSc</option><option>Other school</option></select>
+    <p class="small soft" style="margin:12px 0">MicroTime saves your name, email, class and the gaps you finish, so Anik and Karan can see how the app is used for their aivancity English project. Nothing else is collected and it's never shared.</p>
+    <button class="btn" id="lGo">Start</button>
+    <p class="small" id="lErr" style="color:var(--accent);margin:8px 0 0"></p>
+  </div>
 </div>
 
 <nav>
@@ -422,7 +522,7 @@ const BANK=[
 
 /* ============ SMALL HELPERS ============ */
 const $ = id => document.getElementById(id);
-const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSc3pN4DxvEzn_9UVQbQm2OSsJjD8f5_WvSmp9zkhzb8dtuMxw/viewform";
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSeh0HxTIVUaDIL5afsA-ruob71ALCtSm1b77araRuKPfJpAtQ/viewform"; // tester feedback form
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
 function load(key,fallback){ try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }catch(e){ return fallback; } }
 function save(key,value){ try{ localStorage.setItem(key,JSON.stringify(value)); }catch(e){} }
@@ -605,7 +705,9 @@ function finish(didIt,partial){
   }
   if(!didIt){ toast("No problem. Plans change."); show("v-plan"); return; }
   addPoints(used,T.idea);
+  sendLog("gap",T.idea.t,used);                                            // goes to our sheet
   if(task && !partial){ task.done=true; savePlanner(); toast("Task ticked off"); }
+  $("askForm").classList.toggle("hide",!(me.gaps>=3&&!load("mt_asked",false)));  // ask for feedback once, after 3 gaps
   $("aTitle").textContent="Gap used.";
   $("aSub").textContent=`${used} minute${used>1?"s":""} on "${T.idea.t}".`+(T.leftPage?` You left the page ${T.leftPage} time${T.leftPage>1?"s":""}.`:"");
   $("aNote").value=""; $("aText").value=""; rating=0; drawStars();
@@ -621,7 +723,7 @@ $("aSave").onclick=async()=>{
   if(rating||$("aText").value.trim()){
     let ok=false;
     if(db){ try{ await db.collection("feedback").add({rating,comment:$("aText").value.trim().slice(0,1000),idea:T.idea.t,at:new Date().toISOString()}); ok=true; }catch(e){} }
-    if(!ok) window.open(FORM,"_blank","noopener");
+    if(!ok) sendLog("rating",`${rating}/5 ${T.idea.t}: ${$("aText").value.trim().slice(0,300)}`);   // star rating + comment to our sheet
   }
   toast("Saved"); show("v-plan");
 };
@@ -1050,7 +1152,39 @@ function watchDecks(){
   },()=>{});
 }
 
+/* ============ SIGN IN + USAGE LOG ============ */
+// No passwords: the student types name, email and class once (saved in this browser).
+// Each sign-in, first visit of the day and finished gap is sent to a hidden Google Form
+// that feeds our "MicroTime testers" sheet, so we can see who uses the app.
+const LOG_URL="https://docs.google.com/forms/d/e/1FAIpQLSd9IQ0QUHbA0WelOKebX05O9UlpqPJze1br-WJC_RTrfsczLA/formResponse";
+const F={event:"entry.1172430117",name:"entry.1524182870",email:"entry.1410810183",cls:"entry.1043424234",task:"entry.461617121",mins:"entry.962027132",streak:"entry.651080622"};
+let user=load("mt_user",null);
+
+function sendLog(event,task="",mins=""){
+  if(!user) return;
+  const body=new URLSearchParams({[F.event]:event,[F.name]:user.name,[F.email]:user.email,[F.cls]:user.cls,[F.task]:task,[F.mins]:mins,[F.streak]:me.streak});
+  fetch(LOG_URL,{method:"POST",mode:"no-cors",body}).catch(()=>{});   // fire and forget
+}
+function drawUser(){
+  $("login").classList.toggle("hide",!!user);
+  if(user) $("whoAmI").textContent=user.name;
+}
+$("lGo").onclick=()=>{
+  const name=$("lName").value.trim(), email=$("lEmail").value.trim(), cls=$("lClass").value;
+  if(!name) return $("lErr").textContent="Please add your name.";
+  if(!/^\S+@\S+\.\S+$/.test(email)) return $("lErr").textContent="Please add a valid email.";
+  user={name,email,cls}; save("mt_user",user); save("mt_seen",today());
+  if(!$("nick").value){ $("nick").value=name.split(" ")[0]; save("mt_nick",$("nick").value); }
+  if(cls){ $("myClass").value=cls; save("mt_class",cls); }
+  sendLog("signin"); drawUser(); toast("Welcome, "+name.split(" ")[0]);
+};
+$("signOut").onclick=()=>{ user=null; try{ localStorage.removeItem("mt_user"); }catch(e){} drawUser(); };
+$("askBtn").href=FORM;
+$("askBtn").onclick=()=>save("mt_asked",true);
+
 /* ============ START ============ */
+drawUser();
+if(user&&load("mt_seen","")!==today()){ save("mt_seen",today()); sendLog("open"); }   // "last active"
 drawWeek(); drawNextGap(); drawMe(); drawLog(); drawBoard(); drawSpots(); startCards();
 (async()=>{
   try{
