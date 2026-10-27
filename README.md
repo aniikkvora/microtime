@@ -8,7 +8,7 @@ Pick how long your gap is, how much energy you have and where you are, and Micro
 
 ## What it does
 
-- **Next gap:** upload your timetable (.ics) and see your next free slot and how long it is.
+- **Next gap:** paste your calendar link (iCal/webcal) or upload a .ics file. MicroTime refreshes the link every day and shows your next free slot.
 - **Week planner:** add tasks of any kind (study, errands, emails, gym) with a length and due date. MicroTime fits them into your gaps, most urgent first.
 - **Unfinished work moves forward:** stop a task halfway and the time left goes into your next free gap.
 - **Timer:** pause, +5 minutes, a break halfway, a warning 2 minutes before the end, and a focus mode that notices when you leave the page.
@@ -23,7 +23,7 @@ We surveyed 54 students and interviewed eight of them. Most used only a few of t
 
 ## How it works
 
-Everything is one file, `index.html`, with plain HTML, CSS and JavaScript. Your tasks, timetable and points are saved in your own browser (localStorage). The only data sent anywhere is your name, email, class and the gaps you finish (task name, minutes, streak). It goes to a private Google Sheet that only our project team can see, so we can measure how the app is used for our project.
+Everything is one file, `index.html`, with plain HTML, CSS and JavaScript. Your tasks, timetable and points are saved in your own browser (localStorage). If you use a calendar link, a small helper script fetches it for you and stores nothing. The only data we keep is your name, email, class and the gaps you finish (task name, minutes, streak). It goes to a private Google Sheet that only our project team can see, so we can measure how the app is used for our project.
 
 ## Team
 

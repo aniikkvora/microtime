@@ -333,7 +333,15 @@ input,select,textarea{background:var(--glass-strong);border:1px solid var(--edge
     <div class="section">
       <h2>Timetable</h2>
       <p class="small soft" id="ttStatus">No timetable yet.</p>
-      <label class="drop" id="ttDrop">
+      <div class="label" style="margin-top:12px">Best: paste your calendar link</div>
+      <div class="row"><input id="ttUrl" placeholder="webcal://… or https://….ics" style="flex:3"><button class="btn line" id="ttLink" style="flex:1;padding:10px">Use link</button></div>
+      <details class="small soft" style="margin-top:6px"><summary>Where do I find it?</summary>
+        <p style="margin:6px 0 0"><b>Google Calendar</b> (computer): Settings, click your calendar, then copy "Secret address in iCal format".<br>
+        <b>Outlook</b>: Settings, Calendar, Shared calendars, Publish a calendar, then copy the ICS link.<br>
+        <b>School portal</b>: look for "Export", "Subscribe" or "iCal".<br>
+        MicroTime refreshes it every day, so changes to your timetable show up by themselves.</p></details>
+      <div class="label" style="margin-top:14px">Or upload a file</div>
+      <label class="drop" id="ttDrop" style="margin-top:0">
         <input type="file" id="ttFile">
         <strong>Upload your timetable</strong><br>
         <span class="small soft" id="ttHint">A calendar file (.ics) from Google Calendar, Outlook or your school portal</span>
@@ -458,7 +466,7 @@ input,select,textarea{background:var(--glass-strong);border:1px solid var(--edge
     </div>
   </section>
 
-  <footer>A student project by Anik Vora &amp; Karan Dholiya, aivancity. Prototype v0.8.1 (Lite). <a href="https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan" style="color:inherit">Open the full version</a>.</footer>
+  <footer>A student project by Anik Vora &amp; Karan Dholiya, aivancity. Prototype v0.9 (Lite). <a href="https://claude.ai/artifact/GnSWLKQsNdcYekugYajLan" style="color:inherit">Open the full version</a>.</footer>
 </div>
 
 <!-- =============== SIGN IN (first visit only) =============== -->
@@ -487,6 +495,7 @@ input,select,textarea{background:var(--glass-strong);border:1px solid var(--edge
         <input id="lEmail" type="email" placeholder="Your email" maxlength="80" autocomplete="email" style="margin-top:8px">
       </div>
       <select id="lClass" style="margin-top:8px"><option value="">Your class</option><option>PGE1</option><option>PGE2</option><option>PGE3</option><option>PGE4</option><option>MSc</option><option>Other school</option></select>
+      <input id="lSchool" class="hide" placeholder="Your school's name" maxlength="60" style="margin-top:8px">
       <button class="btn" id="lGo" style="margin-top:12px">Start</button>
       <p style="margin:10px 0 0"><button class="link" id="lBack">Back</button></p>
     </div>
@@ -944,7 +953,7 @@ function weekPlan(){
 function drawWeek(){
   // timetable status
   const n=planner.classes.length;
-  $("ttStatus").textContent = n ? `${n} classes a week loaded.` : "No timetable yet.";
+  $("ttStatus").textContent = n ? `${n} classes a week loaded`+(planner.icsUrl?" from your calendar link, refreshed daily.":".") : "No timetable yet.";
   $("ttClear").classList.toggle("hide",!n);
   // gaps with their planned tasks
   const {plan,unplanned}=weekPlan();
@@ -998,18 +1007,39 @@ $("ttFile").onchange=async()=>{
   }catch(e){ $("ttStatus").textContent="I couldn't find any classes in that file. Try an .ics export or a clearer photo."; }
   $("ttFile").value="";
 };
-$("ttClear").onclick=()=>{ planner.classes=[]; savePlanner(); $("nextGapText").innerHTML=`<button class="link" data-go="v-week" onclick="show('v-week')">Add your timetable</button> and MicroTime will find your gaps for you.`; };
+/* ---- timetable from a calendar link (iCal / webcal), refreshed once a day ----
+   Browsers can't read most calendar links directly, so a tiny Google Apps Script
+   in our account fetches the calendar and hands the text back. */
+const ICS_HELPER = "https://script.google.com/macros/s/AKfycbzZzLeIqHXoOM9j_yCxtDtrQ60a1DdPKlUrkajHGMfNQfQJvdv5K6x1Pxd-bPQpAWTMDg/exec";   // our Apps Script web app URL (ends in /exec)
+async function syncIcsLink(url,quiet){
+  if(!ICS_HELPER){ if(!quiet) $("ttStatus").textContent="Calendar links aren't switched on yet. Upload a .ics file instead."; return; }
+  if(!quiet) $("ttStatus").textContent="Reading your calendar…";
+  try{
+    const text = await fetch(ICS_HELPER+"?url="+encodeURIComponent(url)).then(r=>r.text());
+    if(!text.includes("BEGIN:VCALENDAR")) throw new Error(text);
+    const classes = classesFromIcs(text);
+    if(!classes.length) throw new Error("none");
+    planner.classes=classes; planner.icsUrl=url; planner.icsSynced=today(); savePlanner();
+    if(!quiet) toast(`${classes.length} classes found`);
+  }catch(e){ if(!quiet) $("ttStatus").textContent="I couldn't read that link. Check it's the full iCal link, or upload a .ics file."; }
+}
+$("ttLink").onclick=()=>{
+  const url=$("ttUrl").value.trim().replace(/^webcal:\/\//i,"https://");
+  if(!/^https:\/\/\S+$/i.test(url)) return toast("Paste the full link, starting with webcal:// or https://");
+  syncIcsLink(url);
+};
+$("ttClear").onclick=()=>{ planner.classes=[]; planner.icsUrl=""; $("ttUrl").value=""; savePlanner(); $("nextGapText").innerHTML=`<button class="link" data-go="v-week" onclick="show('v-week')">Add your timetable</button> and MicroTime will find your gaps for you.`; };
 
 // Reads an .ics file. Keeps weekly repeating classes plus one-off events from the last 7 days and next 7 days.
 function classesFromIcs(text){
   text=text.replace(/\r?\n[ \t]/g,"");                                  // join folded lines
-  const out=[], seenKey=new Set(), now=Date.now();
+  const out=[], seenKey=new Set(), now=Date.now(), todayStart=new Date().setHours(0,0,0,0);
   for(const block of text.split("BEGIN:VEVENT").slice(1)){
     const get=k=>{ const m=block.match(new RegExp("^"+k+"[^:\\n]*:(.*)$","m")); return m?m[1].trim():""; };
     const start=icsDate(get("DTSTART")), end=icsDate(get("DTEND"));
     if(!start||!end) continue;
     const weekly=/FREQ=WEEKLY/.test(get("RRULE"));
-    if(!weekly&&Math.abs(start-now)>7*86400000) continue;
+    if(!weekly&&(start<todayStart||start-now>7*86400000)) continue;      // one-off events: the next 7 days
     const c={day:dayIndex(start),start:toHHMM(start.getHours()*60+start.getMinutes()),end:toHHMM(end.getHours()*60+end.getMinutes()),title:get("SUMMARY").replace(/\\,/g,",").slice(0,60)};
     const key=c.day+c.start+c.end; if(seenKey.has(key)) continue; seenKey.add(key); out.push(c);
   }
@@ -1205,7 +1235,7 @@ let pending = null;            // who signed in with Google, before they pick a 
 
 // step 2 of the card: guests type name + email, everyone picks a class
 function step2(p){
-  pending = p; lErr("");
+  pending = p; lErr(""); $("lClass").value=""; $("lSchool").classList.add("hide");
   $("lStep1").classList.add("hide"); $("lStep2").classList.remove("hide");
   $("lGuestFields").classList.toggle("hide", p.via!=="guest");
   $("lWho").textContent = p.via==="guest" ? "" : `Signed in as ${p.name} (${p.email})`;
@@ -1222,29 +1252,51 @@ $("lGoogle").onclick=()=>{
       if(r.error) return lErr("Google sign-in was cancelled.");
       const u = await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{headers:{Authorization:"Bearer "+r.access_token}}).then(x=>x.json()).catch(()=>null);
       if(!u?.email) return lErr("Couldn't read your Google account.");
+      const old = known[u.email.toLowerCase()];
+      if(old) return signIn({...old, via:"google"});              // seen before: no questions, no new sign-in row
       step2({name:u.name||u.email.split("@")[0], email:u.email, via:"google"});
     }
   }).requestAccessToken();
 };
 
+// People who already signed in on this phone/laptop are remembered (even after "Sign out"),
+// so they are never asked for their details twice and are only logged as new once.
+let known = load("mt_known",{});
+function signIn(p){
+  const isNew = !known[p.email.toLowerCase()];
+  user={name:p.name,email:p.email,cls:p.cls,via:p.via}; save("mt_user",user); save("mt_seen",today());
+  known[p.email.toLowerCase()]={name:p.name,email:p.email,cls:p.cls}; save("mt_known",known);
+  if(!$("nick").value){ $("nick").value=p.name.split(" ")[0]; save("mt_nick",$("nick").value); }
+  if(p.cls){ $("myClass").value=p.cls.startsWith("Other")?"Other school":p.cls; save("mt_class",$("myClass").value); }
+  if(isNew) sendLog("signin",p.via);                                 // Task column = how they signed in
+  $("lBack").onclick(); drawUser(); toast((isNew?"Welcome, ":"Welcome back, ")+p.name.split(" ")[0]);
+}
+
+// "Other school" asks for the school's name
+$("lClass").onchange=()=>$("lSchool").classList.toggle("hide",$("lClass").value!=="Other school");
 
 $("lGo").onclick=()=>{
   const guest = pending.via==="guest";
   const name  = guest ? $("lName").value.trim()  : pending.name;
   const email = guest ? $("lEmail").value.trim() : pending.email;
-  const cls   = $("lClass").value;
-  if(!name) return lErr("Please add your name.");
   if(!/^\S+@\S+\.\S+$/.test(email)) return lErr("Please add a valid email.");
-  user={name,email,cls,via:pending.via}; save("mt_user",user); save("mt_seen",today());
-  if(!$("nick").value){ $("nick").value=name.split(" ")[0]; save("mt_nick",$("nick").value); }
-  if(cls){ $("myClass").value=cls; save("mt_class",cls); }
-  sendLog("signin",user.via); drawUser(); toast("Welcome, "+name.split(" ")[0]);   // Task column = how they signed in
+  const old = known[email.toLowerCase()];
+  if(old) return signIn({...old, via:pending.via});                   // guest typed an email we already know
+  let cls = $("lClass").value;
+  if(!name) return lErr("Please add your name.");
+  if(cls==="Other school"){
+    const school=$("lSchool").value.trim(); if(!school) return lErr("Please add your school's name.");
+    cls="Other: "+school.slice(0,60);
+  }
+  signIn({name,email,cls,via:pending.via});
 };
-$("signOut").onclick=()=>{ user=null; try{ localStorage.removeItem("mt_user"); }catch(e){} $("lBack").onclick(); drawUser(); };
+$("signOut").onclick=()=>{ user=null; try{ localStorage.removeItem("mt_user"); }catch(e){} drawUser(); };
 $("askBtn").href=FORM;
 $("askBtn").onclick=()=>save("mt_asked",true);
 
 /* ============ START ============ */
+if(user&&!known[user.email.toLowerCase()]){ known[user.email.toLowerCase()]={name:user.name,email:user.email,cls:user.cls}; save("mt_known",known); }
+if(planner.icsUrl){ $("ttUrl").value=planner.icsUrl; if(planner.icsSynced!==today()) syncIcsLink(planner.icsUrl,true); }   // daily refresh
 drawUser();
 if(user&&load("mt_seen","")!==today()){ save("mt_seen",today()); sendLog("open"); }   // "last active"
 drawWeek(); drawNextGap(); drawMe(); drawLog(); drawBoard(); drawSpots(); startCards();
